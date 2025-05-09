@@ -1,0 +1,1221 @@
+---
+title: "Watterson - PhD Dissertation"
+output:
+  html_notebook: default
+  pdf_document: default
+---
+<br>
+<h1> Set-Up Environment</h1>
+
+0.5 Install R Packages
+```{r}
+install.packages("sjPlot")
+install.packages("multcomp")
+install.packages("olsrr")
+install.packages("dplyr")
+install.packages("readr")
+install.packages("ggplot2")
+install.packages("ggthemes")
+install.packages("likert")
+install.packages("intsvy")
+install.packages("tidyselect")
+install.packages("Hmisc")
+install.packages("knitr")
+```
+
+
+1. Load in R Packages
+
+```{r}
+library(sjPlot)
+library(multcomp)
+library(olsrr)
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(ggthemes)
+library(likert)
+library(intsvy)
+library(tidyselect)
+library(Hmisc)
+library(knitr)
+```
+
+
+<h1> Import Data Set from Redcap</h1>
+
+1. Read in Data Set <br/>
+2. Set headers and descriptions (i.e., questions) <br/>
+3. Assign numerical values to categorical response variables <br/>
+3. Added new variables with factor labels<br/>
+
+```{r}
+
+#Read Data
+data=read.csv('DATA.csv')
+
+#Setting Labels
+label(data$record_id)="Record ID"
+label(data$setting)="Which of the following describes your practice setting?"
+label(data$years_pharmacy)="How many years have you worked at this pharmacy (including as a technician or intern)?"
+label(data$years_pharmacist)="How many years have you worked at this pharmacy as a pharmacist?"
+label(data$prescriptions)="What is the average number of prescriptions this pharmacy fills on a typical weekday?"
+label(data$full_time_rph)="On a typical weekday, how many full time pharmacists work in this pharmacy?"
+label(data$part_time_rph)="On a typical weekday, how many part time pharmacists work in this pharmacy?"
+label(data$float_rph)="On a typical weekday, how many float/relief pharmacists work in this pharmacy?"
+label(data$full_time_staff)="On a typical weekday, how many full time technicians, clerks, and student interns work in this pharmacy?"
+label(data$part_time_staff)="On a typical weekday, how many part time technicians, clerks, and student interns work in this pharmacy?"
+label(data$float_staff)="On a typical weekday, how many float/relief technicians, clerks, and student interns work in this pharmacy?"
+label(data$age)="How old did you turn on your last birthday?"
+label(data$hours_sleep)="How many hours of sleep do you get most nights?"
+label(data$caffeine)="How many servings of caffeine do you consume most days?"
+label(data$race___1)="Which of the following best describes your race or ethnicity? Please check all that apply. (choice=American Indian or Alaska Native)"
+label(data$race___2)="Which of the following best describes your race or ethnicity? Please check all that apply. (choice=Asian or Pacific Islander)"
+label(data$race___3)="Which of the following best describes your race or ethnicity? Please check all that apply. (choice=Black, not of Hispanic origin)"
+label(data$race___4)="Which of the following best describes your race or ethnicity? Please check all that apply. (choice=Hispanic)"
+label(data$race___5)="Which of the following best describes your race or ethnicity? Please check all that apply. (choice=White, not of Hispanic origin)"
+label(data$gender)="What is your gender?"
+label(data$marital_status)="What is your marital status?"
+label(data$adults_house)="How many individuals over the age of 18 live in your household (including yourself)?"
+label(data$minors_house)="How many individuals under the age of 18 live in your household?"
+label(data$shifts)="Using the calendar below, please mark with an X each day that you worked during the last two weeks."
+label(data$days_worked)="Thinking about the last two weeks... how many days did you work?"
+label(data$hours_worked)="Thinking about the last two weeks... how many hours did you work most days?"
+label(data$lunch)="During the last two weeks, did you ever take a scheduled break during the workday? A scheduled break includes any paid or un-paid periods of time where you were not working, such as a lunch break."
+label(data$energy)="Feel that your energy decreased over the course of the day?"
+label(data$tired)="Feel more tired later in the day than you did at the beginning of the day?"
+label(data$pain)="Feel pain or discomfort anywhere in your body?"
+label(data$thinking)="Have trouble thinking clearly at work, even for a short time?"
+label(data$forget)="Have times where you forgot whether or not you had completed a task?"
+label(data$spent_longer)="Have times where you spent longer completing a task later in the day than you would at the beginning of the day?"
+label(data$keep_up)="Have times where you felt that you could not keep up with your work?"
+label(data$impatient)="Have times where you felt more impatient later in the day than you did at the beginning of the day?"
+label(data$performing)="Have times where you felt that you were not performing at your best?"
+label(data$short_cuts)="Find it necessary to take short-cuts when providing patient care?"
+label(data$above_beyond)="Have times where you felt that you were not able to go above and beyond standard patient care?"
+label(data$fatigue_general)="Have times where you felt generally fatigued?"
+label(data$tired_general)="Consider the last two weeks. At the end of most workdays, how tired did you feel?"
+label(data$fatigue_safety)="In general, how much do you think pharmacist fatigue affects patient safety?"
+label(data$fatigue_concern)="In general, how concerned are you about fatigue in pharmacists?"
+label(data$lunch_fatigue)="How much do you think scheduled breaks during the workday would help pharmacists to cope with fatigue?"
+label(data$readiband)="Readiband CSV File"
+label(data$readiscore_average)="Average Readiscore"
+label(data$percent_high)="Percentage of Time Spent at High Effectiveness"
+label(data$reduced_effectiveness)="Percentage of Time Spent at Reduced Effectiveness"
+label(data$low_effectiveness)="Percentage of Time Spent at Low Effectiveness"
+label(data$sleep_quantity)="Sleep Quantity"
+label(data$sleep_quality)="Sleep Quality"
+label(data$awakenings_hour)="Awakenings Per Hour"
+label(data$wake_after_onset)="Wake After Sleep Onset"
+label(data$sleep_onset)="Sleep Onset"
+label(data$wake_time)="Wake Time"
+label(data$i_feel_emotionally_drained)="I feel emotionally drained from my work"
+label(data$i_feel_used_up_at_the_end)="I feel used up at the end of the workday"
+label(data$i_feel_fatigued_when_i_get)="I feel fatigued when I get up in the morning and have to face another day on the job"
+label(data$i_can_easily_understand_ho)="I can easily understand how my patients feel about things"
+label(data$i_feel_i_treat_some_patien)="I feel I treat some patients as if they were impersonal objects"
+label(data$working_with_people_all_da)="Working with people all day is really a strain for me"
+label(data$i_deal_very_effectively_wi)="I deal very effectively with the problems of my patients"
+label(data$i_feel_burned_out_from_my)="I feel burned out from my work"
+label(data$i_feel_i_m_positively_infl)="I feel Im positively influencing the other peoples lives through my work"
+label(data$i_ve_become_more_callous_t)="Ive become more callous toward people since I took this job"
+label(data$i_worry_that_this_job_is_h)="I worry that this job is hardening me emotionally"
+label(data$i_feel_very_energetic)="I feel very energetic"
+label(data$i_feel_frustrated_by_my_jo)="I feel frustrated by my job"
+label(data$i_feel_i_m_working_too_har)="I feel Im working too hard on my job"
+label(data$i_don_t_really_care_what_h)="I dont really care what happens to some patients"
+label(data$working_with_people_direct)="Working with people directly puts too much stress on me"
+label(data$i_can_easily_create_a_rela)="I can easily create a relaxed atmosphere with my patients"
+label(data$i_feel_exhilarated_after_w)="I feel exhilarated after working closely with my patients"
+label(data$i_have_accomplished_many_w)="I have accomplished many worthwhile things in this job"
+label(data$i_feel_like_i_m_at_the_end)="I feel like Im at the end of my rope"
+label(data$in_my_work_i_deal_with_emo)="In my work, I deal with emotional problems very calmly"
+label(data$i_feel_patients_blame_me_f)="I feel patients blame me for their problems"
+label(data$ee_total)="EE Total Score"
+label(data$ee_average)="EE Average Score"
+label(data$dp_total)="DP Total Score"
+label(data$dp_average)="DP Average Score"
+label(data$pa_total)="PA Total Score"
+label(data$pa_average)="PA Average Score"
+
+#Setting Units
+#Setting Factors(create new variables for factors)
+data$setting.factor = factor(data$setting,levels=c("1","2","3","4","5"))
+data$race___1.factor = factor(data$race___1,levels=c("0","1"))
+data$race___2.factor = factor(data$race___2,levels=c("0","1"))
+data$race___3.factor = factor(data$race___3,levels=c("0","1"))
+data$race___4.factor = factor(data$race___4,levels=c("0","1"))
+data$race___5.factor = factor(data$race___5,levels=c("0","1"))
+data$gender.factor = factor(data$gender,levels=c("1","2","3"))
+data$marital_status.factor = factor(data$marital_status,levels=c("1","2","3","4","5"))
+data$lunch.factor = factor(data$lunch,levels=c("1","0"))
+data$energy.factor = factor(data$energy,levels=c("1","2","3","4","5"))
+data$tired.factor = factor(data$tired,levels=c("1","2","3","4","5"))
+data$pain.factor = factor(data$pain,levels=c("1","2","3","4","5"))
+data$thinking.factor = factor(data$thinking,levels=c("1","2","3","4","5"))
+data$forget.factor = factor(data$forget,levels=c("1","2","3","4","5"))
+data$spent_longer.factor = factor(data$spent_longer,levels=c("1","2","3","4","5"))
+data$keep_up.factor = factor(data$keep_up,levels=c("1","2","3","4","5"))
+data$impatient.factor = factor(data$impatient,levels=c("1","2","3","4","5"))
+data$performing.factor = factor(data$performing,levels=c("1","2","3","4","5"))
+data$short_cuts.factor = factor(data$short_cuts,levels=c("1","2","3","4","5"))
+data$above_beyond.factor = factor(data$above_beyond,levels=c("1","2","3","4","5"))
+data$fatigue_general.factor = factor(data$fatigue_general,levels=c("1","2","3","4","5"))
+data$tired_general.factor = factor(data$tired_general,levels=c("1","2","3","4","5"))
+data$fatigue_safety.factor = factor(data$fatigue_safety,levels=c("1","2","3","4","5"))
+data$fatigue_concern.factor = factor(data$fatigue_concern,levels=c("1","2","3","4","5"))
+data$lunch_fatigue.factor = factor(data$lunch_fatigue,levels=c("1","2","3","4","5"))
+data$i_feel_emotionally_drained.factor = factor(data$i_feel_emotionally_drained,levels=c("0","1","2","3","4","5","6"))
+data$i_feel_used_up_at_the_end.factor = factor(data$i_feel_used_up_at_the_end,levels=c("0","1","2","3","4","5","6"))
+data$i_feel_fatigued_when_i_get.factor = factor(data$i_feel_fatigued_when_i_get,levels=c("0","1","2","3","4","5","6"))
+data$i_can_easily_understand_ho.factor = factor(data$i_can_easily_understand_ho,levels=c("0","1","2","3","4","5","6"))
+data$i_feel_i_treat_some_patien.factor = factor(data$i_feel_i_treat_some_patien,levels=c("0","1","2","3","4","5","6"))
+data$working_with_people_all_da.factor = factor(data$working_with_people_all_da,levels=c("0","1","2","3","4","5","6"))
+data$i_deal_very_effectively_wi.factor = factor(data$i_deal_very_effectively_wi,levels=c("0","1","2","3","4","5","6"))
+data$i_feel_burned_out_from_my.factor = factor(data$i_feel_burned_out_from_my,levels=c("0","1","2","3","4","5","6"))
+data$i_feel_i_m_positively_infl.factor = factor(data$i_feel_i_m_positively_infl,levels=c("0","1","2","3","4","5","6"))
+data$i_ve_become_more_callous_t.factor = factor(data$i_ve_become_more_callous_t,levels=c("0","1","2","3","4","5","6"))
+data$i_worry_that_this_job_is_h.factor = factor(data$i_worry_that_this_job_is_h,levels=c("0","1","2","3","4","5","6"))
+data$i_feel_very_energetic.factor = factor(data$i_feel_very_energetic,levels=c("0","1","2","3","4","5","6"))
+data$i_feel_frustrated_by_my_jo.factor = factor(data$i_feel_frustrated_by_my_jo,levels=c("0","1","2","3","4","5","6"))
+data$i_feel_i_m_working_too_har.factor = factor(data$i_feel_i_m_working_too_har,levels=c("0","1","2","3","4","5","6"))
+data$i_don_t_really_care_what_h.factor = factor(data$i_don_t_really_care_what_h,levels=c("0","1","2","3","4","5","6"))
+data$working_with_people_direct.factor = factor(data$working_with_people_direct,levels=c("0","1","2","3","4","5","6"))
+data$i_can_easily_create_a_rela.factor = factor(data$i_can_easily_create_a_rela,levels=c("0","1","2","3","4","5","6"))
+data$i_feel_exhilarated_after_w.factor = factor(data$i_feel_exhilarated_after_w,levels=c("0","1","2","3","4","5","6"))
+data$i_have_accomplished_many_w.factor = factor(data$i_have_accomplished_many_w,levels=c("0","1","2","3","4","5","6"))
+data$i_feel_like_i_m_at_the_end.factor = factor(data$i_feel_like_i_m_at_the_end,levels=c("0","1","2","3","4","5","6"))
+data$in_my_work_i_deal_with_emo.factor = factor(data$in_my_work_i_deal_with_emo,levels=c("0","1","2","3","4","5","6"))
+data$i_feel_patients_blame_me_f.factor = factor(data$i_feel_patients_blame_me_f,levels=c("0","1","2","3","4","5","6"))
+
+levels(data$setting.factor)=c("National Chain Pharmacy","Mass Merchandiser Pharmacy","Grocery Store Pharmacy","Independent Pharmacy","Other")
+levels(data$race___1.factor)=c("Unchecked","Checked")
+levels(data$race___2.factor)=c("Unchecked","Checked")
+levels(data$race___3.factor)=c("Unchecked","Checked")
+levels(data$race___4.factor)=c("Unchecked","Checked")
+levels(data$race___5.factor)=c("Unchecked","Checked")
+levels(data$gender.factor)=c("Male","Female","Prefer to self-describe")
+levels(data$marital_status.factor)=c("Single","Married","Separated","Divorced","Widowed")
+levels(data$lunch.factor)=c("Yes","No")
+levels(data$energy.factor)=c("None of the days you worked","Less than half of the days you worked","Half of the days you worked","More than half of the days you worked","All of the days you worked")
+levels(data$tired.factor)=c("None of the days you worked","Less than half of the days you worked","Half of the days you worked","More than half of the days you worked","All of the days you worked")
+levels(data$pain.factor)=c("None of the days you worked","Less than half of the days you worked","Half of the days you worked","More than half of the days you worked","All of the days you worked")
+levels(data$thinking.factor)=c("None of the days you worked","Less than half of the days you worked","Half of the days you worked","More than half of the days you worked","All of the days you worked")
+levels(data$forget.factor)=c("None of the days you worked","Less than half of the days you worked","Half of the days you worked","More than half of the days you worked","All of the days you worked")
+levels(data$spent_longer.factor)=c("None of the days you worked","Less than half of the days you worked","Half of the days you worked","More than half of the days you worked","All of the days you worked")
+levels(data$keep_up.factor)=c("None of the days you worked","Less than half of the days you worked","Half of the days you worked","More than half of the days you worked","All of the days you worked")
+levels(data$impatient.factor)=c("None of the days you worked","Less than half of the days you worked","Half of the days you worked","More than half of the days you worked","All of the days you worked")
+levels(data$performing.factor)=c("None of the days you worked","Less than half of the days you worked","Half of the days you worked","More than half of the days you worked","All of the days you worked")
+levels(data$short_cuts.factor)=c("None of the days you worked","Less than half of the days you worked","Half of the days you worked","More than half of the days you worked","All of the days you worked")
+levels(data$above_beyond.factor)=c("None of the days you worked","Less than half of the days you worked","Half of the days you worked","More than half of the days you worked","All of the days you worked")
+levels(data$fatigue_general.factor)=c("None of the days you worked","Less than half of the days you worked","Half of the days you worked","More than half of the days you worked","All of the days you worked")
+levels(data$tired_general.factor)=c("Not at all tired","A little tired","Somewhat tired","Very tired","Extremely tired")
+levels(data$fatigue_safety.factor)=c("Not at all","A little","Some","Quite a bit","A great deal")
+levels(data$fatigue_concern.factor)=c("Not at all","A little","Some","Quite a bit","A great deal")
+levels(data$lunch_fatigue.factor)=c("Not at all","A little","Some","Quite a bit","A great deal")
+levels(data$i_feel_emotionally_drained.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_feel_used_up_at_the_end.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_feel_fatigued_when_i_get.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_can_easily_understand_ho.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_feel_i_treat_some_patien.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$working_with_people_all_da.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_deal_very_effectively_wi.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_feel_burned_out_from_my.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_feel_i_m_positively_infl.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_ve_become_more_callous_t.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_worry_that_this_job_is_h.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_feel_very_energetic.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_feel_frustrated_by_my_jo.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_feel_i_m_working_too_har.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_don_t_really_care_what_h.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$working_with_people_direct.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_can_easily_create_a_rela.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_feel_exhilarated_after_w.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_have_accomplished_many_w.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_feel_like_i_m_at_the_end.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$in_my_work_i_deal_with_emo.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+levels(data$i_feel_patients_blame_me_f.factor)=c("Never","A few times a year or less","Once a month or less","A few times a month","Once a week","A few times per week","Every day")
+
+head(data)
+
+```
+
+<h1> Subset data based on Pharmacy Setting </h1>
+
+<h2>Chain Pharmacy Subset</h2>
+```{r}
+data.chain <- subset(data,setting == 1)
+head(data.chain)
+```
+
+<h2>Independent Subset </h2>
+```{r}
+data.independent <- subset(data,setting == 4)
+head(data.independent)
+```
+
+<h2>Other Subset </h2>
+Including grocery store, mass merchandiser, and "other" community pharmacy
+```{r}
+data.other <- subset(data,setting == 5)
+head(data.other)
+```
+
+
+<h1> Pharmacist Fatigue Instrument</h1>
+1. Create new data sets from for only Pharmacist Fatigue Instrument
+```{r}
+PFI = data[,c(2,28:39)]
+PFI.factor = data[,c(92:103)]
+head(PFI)
+head(PFI.factor)
+```
+
+2. Visualize frequency of Pharmacist Fatigue Instrument
+```{r}
+
+PFI.factor <- PFI.factor %>%
+      rename("Feel that your energy decreased over the course of the day?" = energy.factor,
+             "Feel more tired later in the day than you did at the beginning of the day?" = tired.factor,
+             "Feel pain or discomfort anywhere in your body?" = pain.factor,
+             "Have trouble thinking clearly at work, even for a short time?"=thinking.factor,
+             "Have times where you forgot whether or not you had completed a task?" = forget.factor,
+             "Have times where you spent longer completing a task later in the day than you would at the beginning of the day?" = spent_longer.factor,
+             "Have times where you felt that you could not keep up with your work?" = keep_up.factor,
+             "Have times where you felt more impatient later in the day than you did at the beginning of the day?" = impatient.factor,
+             "Have times where you felt that you were not performing at your best?" = performing.factor,
+             "Find it necessary to take short-cuts when providing patient care?" = short_cuts.factor,
+             "Have times where you felt that you were not able to go above and beyond standard patient care?" = above_beyond.factor,
+             "Have times where you felt generally fatigued?" = fatigue_general.factor)
+
+
+likert.bar.plot(likert(PFI.factor),
+                ordered = TRUE,
+                text.size = 5,
+                legend = "Frequency",
+                legend.position="right") +
+  
+  theme(text = element_text(size = rel(5)),
+        legend.text = element_text(size=rel(3)))
+
+  
+  ggtitle("Pharmacist Occupational Fatigue")
+  ggsave("Pharmacist Fatigue Instrument.jpeg", 
+         width = 40, height = 30, units ="cm")
+```
+
+
+
+<h2> Mental and Physical Fatigue Factors </h2>
+Aggregate responses to PFI based on physical and mental fatigue domains
+```{r}
+PFI.avg = PFI %>%
+  mutate(PF_total = (energy-1) + (tired-1) + (fatigue_general-1)) %>%
+  mutate(PF_avg = PF_total/3) %>%
+  mutate(MF_total = (thinking-1) + (forget-1) + (spent_longer-1) + (performing-1)) %>%
+  mutate(MF_avg = MF_total/4)
+
+head(PFI.avg)
+```
+
+
+<h1> Maslach Burnout Inventory</h1>
+
+1. Create new data sets from for only MBI </br>
+Add logistic variable for whether participant was "burnt out" based on cutoffs from the literature
+```{r}
+MBI = data[,c(2,55:76)]
+MBI.factor = data[,c(108:129)]
+
+MBI.avg = data[,c(2,77:82)]
+
+MBI.avg = MBI.avg%>%
+  mutate(B_EE = (ee_total >= 27)*1) %>%
+  mutate(B_DP = (dp_total >= 10)*1) %>%
+  mutate(B_PA = (pa_total <= 33)*1) %>%
+  mutate(B_TOTAL = (B_EE + B_DP + B_PA >= 1)*1)
+
+head(MBI)
+head(MBI.factor)
+head(MBI.avg)
+```
+
+2. Visualize frequency of Maslach Burnout Inventory
+```{r}
+
+MBI.factor <- MBI.factor %>%
+      rename("I feel emotionally drained from my work" = i_feel_emotionally_drained.factor,
+             "I feel used up at the end of the workday" = i_feel_used_up_at_the_end.factor,
+             "I feel fatigued when I get up in the morning and have to face another day on the job" = i_feel_fatigued_when_i_get.factor,
+             "I can easily understand how my patients feel about things" = i_can_easily_understand_ho.factor,
+             "I feel I treat some patients as if they were impersonal objects"  = i_feel_i_treat_some_patien.factor,
+             "Working with people all day is really a strain for me" = working_with_people_all_da.factor,
+             "I deal very effectively with the problems of my patients" = i_deal_very_effectively_wi.factor,
+             "I feel burned out from my work" = i_feel_burned_out_from_my.factor,
+             "I feel Im positively influencing the other peoples lives through my work" = i_feel_i_m_positively_infl.factor,
+             "Ive become more callous toward people since I took this job" = i_ve_become_more_callous_t.factor,
+             "I worry that this job is hardening me emotionally" = i_worry_that_this_job_is_h.factor,
+             "I feel very energetic" = i_feel_very_energetic.factor,
+             "I feel frustrated by my job" = i_feel_frustrated_by_my_jo.factor,
+             "I feel Im working too hard on my job" = i_feel_i_m_working_too_har.factor,
+             "I dont really care what happens to some patients" = i_don_t_really_care_what_h.factor,
+             "Working with people directly puts too much stress on me" = working_with_people_direct.factor,
+             "I can easily create a relaxed atmosphere with my patients" = i_can_easily_create_a_rela.factor,
+             "I feel exhilarated after working closely with my patients" = i_feel_exhilarated_after_w.factor,
+             "I have accomplished many worthwhile things in this job" = i_have_accomplished_many_w.factor,
+             "I feel like Im at the end of my rope" = i_feel_like_i_m_at_the_end.factor,
+             "In my work, I deal with emotional problems very calmly" = in_my_work_i_deal_with_emo.factor,
+             "I feel patients blame me for their problems" = i_feel_patients_blame_me_f.factor)
+             
+            
+
+likert.bar.plot(likert(MBI.factor),
+                ordered = TRUE,
+                text.size = 6,
+                wrap = 60,
+                legend = "Frequency",
+                legend.position="right")+
+  
+    
+  theme(text = element_text(size = rel(6)),
+        legend.text = element_text(size=rel(5)))
+
+  
+  ggtitle("Pharmacist Burnout")
+  ggsave("Maslach Burnout Inventory.jpeg", 
+         width = 60, height = 60, units ="cm")
+```
+
+<h1> Fatigue Science Readiband</h1>
+
+Visualize Fatigue Science Readiband Averages by Pharmacy Setting
+```{r}
+ggplot(data, aes(x=setting.factor, y=readiscore_average, fill=setting.factor))+
+    geom_boxplot()+
+    theme_clean() +
+  stat_summary(fun=mean, geom="point", shape=18, size=3, color="white")+
+  ggtitle("Fatigue Science Readiscore")+
+  xlab("Community Pharmacy")+
+  ylab("Average Readiscore")
+
+ggsave("Average Readiscore.jpeg", 
+         width = 30, height = 20, units ="cm")
+
+```
+
+
+Mutate data set to add binary variable of average "high effectiveness"
+```{r}
+data.FS = data[,c(2:12,14,20:23,25:27,45)]
+data.FS.PFI = data[,c(28:39,45)]
+
+data.FS.log = data.FS%>%
+  mutate(high_effect = (readiscore_average >= 90)*1)
+
+data.FS.PFI.log = data.FS.PFI %>%
+  mutate(high_effect = (readiscore_average >= 90)*1)
+
+head(data.FS)
+head(data.FS.PFI)
+head(data.FS.PFI.log)
+```
+
+
+<h2>Work System Model</h2>
+
+```{r}
+data.FS %>%
+  ggplot(aes(x=prescriptions, y=readiscore_average))+
+  geom_point(colour = "red", size=5)+
+  xlab("Daily Prescription Volume (Prescriptions")+
+  ylab("Average Readiscore") +
+  theme(text = element_text(size = 20))
+  
+  ggsave("Prescriptions on ReadiScore.jpeg", 
+         width = 30, height = 20, units ="cm")
+  
+```
+
+```{r}
+data.FS %>%
+  ggplot(aes(x=days_worked, y=readiscore_average))+
+  geom_point(colour = "red", size=5)+
+  xlab("Days Worked in 14-Day Period (Days)")+
+  ylab("Average Readiscore")+
+  theme(text = element_text(size = 20))
+
+ggsave("Days Worked on Readiscore.jpeg", 
+         width = 30, height = 20, units ="cm")
+```
+
+
+<h2>Personal Model </h2>
+
+```{r}
+data.FS %>%
+  ggplot(aes(x=age, y=readiscore_average))+
+   geom_point(colour = "red", size=5)+
+  xlab("Age (Years)")+
+  ylab("Average Readiscore")+
+  theme(text = element_text(size = 20))
+
+ggsave("Age on ReadiScore.jpeg", 
+         width = 30, height = 20, units ="cm")
+```
+
+```{r}
+data.FS %>%
+  ggplot(aes(x=minors_house, y=readiscore_average))+
+  geom_point(colour = "red", size=5)+
+  xlab("Individuals Under 18 Years Old in House (Minors)")+
+  ylab("Average Readiscore")+
+  theme(text = element_text(size = 20))
+
+ggsave("Minors on ReadiScore.jpeg", 
+         width = 30, height = 20, units ="cm")
+```
+
+```{r}
+data.FS %>%
+  ggplot(aes(x=caffeine, y=readiscore_average))+
+    geom_point(colour = "red", size=5)+
+  xlab("Daily Caffeine Intake (Servings)")+
+  ylab("Average Readiscore")+
+  theme(text = element_text(size = 20))
+
+ggsave("Caffeine on ReadiScore.jpeg", 
+         width = 30, height = 20, units ="cm")
+```
+
+```{r}
+data.FS %>%
+  ggplot(aes(x=years_pharmacist, y=readiscore_average))+
+    geom_point(colour = "red", size=5)+
+  xlab("Years Working in Pharmacy as Pharmacist (Years)")+
+  ylab("Average Readiscore")+
+  theme(text = element_text(size = 20))
+
+ggsave("Years Pharmacist on ReadiScore.jpeg", 
+         width = 30, height = 20, units ="cm")
+```
+
+```{r}
+data.FS %>%
+  ggplot(aes(x=adults_house, y=readiscore_average))+
+    geom_point(colour = "red", size=5)+
+  xlab("Individuals Over 18 Years Old In the House (Adults)")+
+  ylab("Average Readiscore")+
+  theme(text = element_text(size = 20))
+
+ggsave("Adults on ReadiScore.jpeg", 
+         width = 30, height = 20, units ="cm")
+```
+
+
+
+
+
+
+<h1> OLSRR Package </h1>
+
+```{r}
+
+data.FS = data[,c(2:12,14,20:23,25:27,45)] %>%
+  mutate(chain = (setting ==1)*1) %>%
+  mutate(independent =(setting==4)*1) %>%
+  mutate(other = (setting==5)*1)
+
+data.FS1 <- subset(data.FS, select = -c(setting)) %>%
+  slice(-c(40))
+
+
+
+model.readi1 <- lm(data=data.FS1, readiscore_average ~.)
+
+Aim1.2<- ols_step_both_p(model.readi1, penter=0.1, details=TRUE)
+plot(Aim1.2)
+
+
+Aim1.2 <- lm(data=data.FS1, readiscore_average ~
+               minors_house +
+               adults_house )
+```
+```{r}
+ols_plot_resid_qq(Aim1.2)
+```
+
+```{r}
+ols_test_normality(Aim1.2)
+```
+```{r}
+ols_plot_resid_fit(Aim1.2)
+```
+```{r}
+ols_plot_resid_hist(Aim1.2)
+```
+
+```{r}
+ols_plot_cooksd_bar(Aim1.2)
+```
+
+```{r}
+ols_plot_resid_stud(Aim1.2)
+```
+
+```{r}
+ols_test_breusch_pagan(Aim1.2, rhs = TRUE, multiple = TRUE, p.adj = 'bonferroni')
+```
+```{r}
+ols_test_score(Aim1.2)
+```
+```{r}
+ols_vif_tol(Aim1.2)
+```
+```{r}
+ols_plot_obs_fit(Aim1.2)
+```
+
+
+
+
+<h1? Aim 1.2 Fatigue Science and Demographic Logisitc Regression </h1>
+```{r}
+
+
+data.FS.log %>%
+  mutate(chain = (setting ==1)*1) %>%
+  mutate(independent =(setting==4)*1) %>%
+  mutate(other = (setting==5)*1)
+
+data.FS.log1 <- subset(data.FS.log, select = -c(readiscore_average)) %>%
+  slice(-c(40))
+
+data.FS.log2 <- subset(data.FS.log1, select = -c(setting))
+
+
+model.readi2 <- glm(data=data.FS.log2, high_effect ~ ., family = binomial)
+summary(model.readi2)
+
+```
+
+
+
+
+<h1> Aim 2.1 Fatigue Science and PFI Logistic Regression </h1>
+
+```{r}
+
+data.FS.PFI.log1 <- subset(data.FS.PFI.log, select = -c(readiscore_average)) %>%
+  slice(-c(40))
+
+
+model.readi3 <- glm(data=data.FS.PFI.log1, high_effect ~ ., family = binomial)
+summary(model.readi3)
+
+```
+
+
+
+
+
+
+<h1> Aim 2.1 Fatigue Science and Pharmacist Fatigue Instrument </h1>
+
+```{r}
+data <- read.csv('big.data.csv')
+data.FS.PFI = data[,c(26:37,43)]
+
+model.readiPFI <- lm(data= data.FS.PFI, readiscore_average ~.)
+
+Aim2.1 <- ols_step_both_p(model.readiPFI, penter= 0.1, details = TRUE,)
+
+```
+
+
+```{r}
+
+Aim2.1 <-  lm(data= data.FS.PFI, readiscore_average ~ keep_up)
+
+data.FS.PFI %>%
+  ggplot(aes(x=keep_up, y=readiscore_average))+
+    geom_point(colour = "red", size=5)+
+  geom_abline(intercept = 93.066, slope = -1.657, color = "blue", linetype="dashed", size = 3)+
+  xlab("Trouble Keeping Up with Work") +
+  ylab("Average Readiscore")+
+  theme(text = element_text(size = 20)) 
+
+ggsave("Keep Up on ReadiScore.jpeg", 
+         width = 30, height = 20, units ="cm")
+```
+```{r}
+Aim2.1 <-  lm(data= data.FS.PFI, readiscore_average ~ keep_up)
+```
+
+
+
+```{r}
+ols_plot_resid_qq(Aim2.1)
+```
+
+```{r}
+ols_test_normality(Aim2.1)
+```
+```{r}
+ols_plot_resid_fit(Aim2.1)
+```
+```{r}
+ols_plot_resid_hist(Aim2.1)
+```
+
+```{r}
+ols_plot_cooksd_bar(Aim2.1)
+```
+
+```{r}
+ols_plot_resid_stud(Aim2.1)
+```
+
+```{r}
+ols_test_breusch_pagan(Aim2.1, rhs = TRUE, multiple = TRUE, p.adj = 'bonferroni')
+```
+```{r}
+ols_test_score(Aim2.1)
+```
+```{r}
+ols_vif_tol(Aim2.1)
+```
+```{r}
+ols_plot_obs_fit(Aim2.1)
+```
+
+
+```{r}
+library(graphics)
+library(psych)
+library(GPArotation)
+library(lavaan)
+library(semTools)
+```
+
+
+
+
+Clean data so all on same scale (aggregate two most extreme MBI reponses on each side)
+```{r}
+Aim2.2 =read.csv('MBI.PFI.csv')
+```
+
+
+
+####Conduct an initial principle components analysis, present the scree plot, and report on the number of components.####
+
+```{r}
+cor(Aim2.2)
+
+Aim2.2pca <-print(summary(princomp(Aim2.2), loadings=TRUE,cutoff=0.3), digits=2)
+screeplot(Aim2.2pca,type="lines")
+```
+
+
+####Conduct the factor analysis using ML and report fit statistics and the BIC.####
+```{r}
+
+
+#### 2 ####
+dataMLpro2 <- fa(Aim2.2,nfactors=2,rotate="promax",fm="ml", missing=TRUE)
+dataMLpro2
+fa.diagram(dataMLpro2,cut=0,digits=2)
+
+
+```
+
+```{r}
+#### 3 ####
+dataMLpro3 <- fa(Aim2.2,nfactors=3,rotate="promax",fm="ml", missing=TRUE)
+dataMLpro3
+fa.diagram(dataMLpro3,cut=0,digits=2)
+
+#### 4 ####
+dataMLpro4 <- fa(Aim2.2,nfactors=4,rotate="promax",fm="ml", missing=TRUE)
+dataMLpro4
+fa.diagram(dataMLpro4,cut=0,digits=2)
+
+```
+
+
+
+
+```{r}
+write.csv(MBI.avg, "MBI.avg.csv")
+write.csv(PFI.avg, "PFI.avg.csv")
+```
+
+
+```{r}
+Aim2.2 = read.csv('PFI.avg.MBI.avg.csv')
+```
+
+```{r}
+PFI.MBI.model <- glm(data=Aim2.2, B_TOTAL ~ 
+                       
+                       energy +
+                       tired +
+                       pain +
+                       thinking +
+                       forget +
+                       spent_longer +
+                       keep_up +
+                       impatient +
+                       performing +
+                       short_cuts +
+                       above_beyond +
+                       fatigue_general)
+
+tab_model(PFI.MBI.model)
+```
+
+
+
+
+
+
+One great big data set....
+
+```{r}
+big.data <- data %>%
+  mutate(PF_total = (energy-1) + (tired-1) + (fatigue_general-1)) %>%
+  mutate(PF_avg = PF_total/3) %>%
+  mutate(MF_total = (thinking-1) + (forget-1) + (spent_longer-1) + (performing-1)) %>%
+  mutate(MF_avg = MF_total/4) %>%
+  mutate(high_effect = (readiscore_average >= 90)*1) %>%
+  mutate(B_EE = (ee_total >= 27)*1) %>%
+  mutate(B_DP = (dp_total >= 10)*1) %>%
+  mutate(B_PA = (pa_total <= 33)*1) %>%
+  mutate(B_TOTAL = (B_EE + B_DP + B_PA >= 1)*1)
+  
+write.csv(big.data,"big.data.csv")
+  
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+data.FS.PFI2 <- data.FS.PFI  %>%
+  mutate(PF_total = (energy-1) + (tired-1) + (fatigue_general-1)) %>%
+  mutate(PF_avg = PF_total/3) %>%
+  mutate(MF_total = (thinking-1) + (forget-1) + (spent_longer-1) + (performing-1)) %>%
+  mutate(MF_avg = MF_total/4)
+
+```
+
+
+
+```{r}
+
+model.readi4 <- lm(data= data.FS.PFI2, readiscore_average ~ 
+                     PF_avg + MF_avg)
+
+summary(model.readi4)
+```
+
+```{r}
+data.FS.PFI.log2 <- data.FS.PFI.log1 %>%
+  mutate(PF_total = (energy-1) + (tired-1) + (fatigue_general-1)) %>%
+  mutate(PF_avg = PF_total/3) %>%
+  mutate(MF_total = (thinking-1) + (forget-1) + (spent_longer-1) + (performing-1)) %>%
+  mutate(MF_avg = MF_total/4) %>%
+  slice(-c(40))
+
+
+model.readi5 <- glm(data=data.FS.PFI.log2, high_effect ~ PF_avg + MF_avg, family = binomial)
+summary(model.readi5)
+
+```
+
+
+
+
+
+<h1> Extra Junk </h1>
+
+3. Visualize Frequency for Chain Pharmacists
+```{r}
+PFI.factor.chain = data.chain[,c(92:103)] %>%
+      rename("Feel that your energy decreased over the course of the day?" = energy.factor,
+             "Feel more tired later in the day than you did at the beginning of the day?" = tired.factor,
+             "Feel pain or discomfort anywhere in your body?" = pain.factor,
+             "Have trouble thinking clearly at work, even for a short time?"=thinking.factor,
+             "Have times where you forgot whether or not you had completed a task?" = forget.factor,
+             "Have times where you spent longer completing a task later in the day than you would at the beginning of the day?" = spent_longer.factor,
+             "Have times where you felt that you could not keep up with your work?" = keep_up.factor,
+             "Have times where you felt more impatient later in the day than you did at the beginning of the day?" = impatient.factor,
+             "Have times where you felt that you were not performing at your best?" = performing.factor,
+             "Find it necessary to take short-cuts when providing patient care?" = short_cuts.factor,
+             "Have times where you felt that you were not able to go above and beyond standard patient care?" = above_beyond.factor,
+             "Have times where you felt generally fatigued?" = fatigue_general.factor)
+
+
+likert.bar.plot(likert(PFI.factor.chain),
+                ordered = TRUE,
+                text.size = 6,
+                legend = "Frequency",
+                legend.position="right")+
+  
+  ggtitle("Chain Pharmacist Occupational Fatigue")
+  ggsave("Chain Pharmacist Fatigue Instrument.jpeg", 
+         width = 30, height = 20, units ="cm")
+```
+
+
+4. Visualize Frequency for Independent Pharmacists
+```{r}
+
+PFI.factor.indy <- data.independent[,c(92:103)] %>%
+   rename("Feel that your energy decreased over the course of the day?" = energy.factor,
+             "Feel more tired later in the day than you did at the beginning of the day?" = tired.factor,
+             "Feel pain or discomfort anywhere in your body?" = pain.factor,
+             "Have trouble thinking clearly at work, even for a short time?"=thinking.factor,
+             "Have times where you forgot whether or not you had completed a task?" = forget.factor,
+             "Have times where you spent longer completing a task later in the day than you would at the beginning of the day?" = spent_longer.factor,
+             "Have times where you felt that you could not keep up with your work?" = keep_up.factor,
+             "Have times where you felt more impatient later in the day than you did at the beginning of the day?" = impatient.factor,
+             "Have times where you felt that you were not performing at your best?" = performing.factor,
+             "Find it necessary to take short-cuts when providing patient care?" = short_cuts.factor,
+             "Have times where you felt that you were not able to go above and beyond standard patient care?" = above_beyond.factor,
+             "Have times where you felt generally fatigued?" = fatigue_general.factor)
+     
+likert.bar.plot(likert(PFI.factor.indy),
+                ordered = TRUE,
+                legend = "Frequency",
+                legend.position="right")+
+  
+  ggtitle("Independent Pharmacist Occupational Fatigue")
+  ggsave("Independent Pharmacist Fatigue Instrument.jpeg", 
+         width = 30, height = 20, units ="cm")
+```
+
+
+5.Visualize Frequency for Other Pharmacists
+```{r}
+PFI.factor.other <- data.other[,c(92:103)] %>%
+   rename("Feel that your energy decreased over the course of the day?" = energy.factor,
+             "Feel more tired later in the day than you did at the beginning of the day?" = tired.factor,
+             "Feel pain or discomfort anywhere in your body?" = pain.factor,
+             "Have trouble thinking clearly at work, even for a short time?"=thinking.factor,
+             "Have times where you forgot whether or not you had completed a task?" = forget.factor,
+             "Have times where you spent longer completing a task later in the day than you would at the beginning of the day?" = spent_longer.factor,
+             "Have times where you felt that you could not keep up with your work?" = keep_up.factor,
+             "Have times where you felt more impatient later in the day than you did at the beginning of the day?" = impatient.factor,
+             "Have times where you felt that you were not performing at your best?" = performing.factor,
+             "Find it necessary to take short-cuts when providing patient care?" = short_cuts.factor,
+             "Have times where you felt that you were not able to go above and beyond standard patient care?" = above_beyond.factor,
+             "Have times where you felt generally fatigued?" = fatigue_general.factor)
+     
+likert.bar.plot(likert(PFI.factor.other),
+                ordered = TRUE,
+                wrap = 60,
+                legend = "Frequency",
+                legend.position="right")+
+  
+  ggtitle("Other Community Pharmacist Occupational Fatigue")
+  ggsave("Other Community Pharmacist Fatigue Instrument.jpeg", 
+         width = 30, height = 20, units ="cm")
+```
+
+Test general model comparing personal and work factors to Readiscore results
+```{r}
+model.readi1 <- lm(data=data.FS, readiscore_average ~.)
+summary(model.readi1)
+```
+Nothing significant
+
+
+```{r}
+
+model.work1 <- lm(data=data.FS, readiscore_average ~ 
+                   setting +
+                   prescriptions +
+                   full_time_rph +
+                   part_time_rph +
+                   float_rph +
+                   full_time_staff +
+                   part_time_staff +
+                   float_staff +
+                   days_worked +
+                   hours_worked +
+                   lunch)
+                   
+
+summary(model.work1)
+
+```
+
+Nothing significant, in linear regression. Removed lowest p-values (<0.4)
+
+```{r}
+model.work2 <- lm(data=data.FS, readiscore_average ~ 
+                   prescriptions +
+                   full_time_rph +
+                   part_time_rph +
+                   full_time_staff +
+                   float_staff +
+                   days_worked +
+                   lunch)
+                   
+
+summary(model.work2)
+```
+
+
+Still nothing significant
+
+```{r}
+model.work3 <- lm(data=data.FS, readiscore_average ~ 
+                   prescriptions +
+                   full_time_rph +
+                   full_time_staff)
+                   
+
+summary(model.work3)
+```
+Nothing significant
+
+
+```{r}
+model.work4 <- glm(data=data.FS.log, high_effect ~
+                   setting +
+                   prescriptions +
+                   full_time_rph +
+                   part_time_rph +
+                   float_rph +
+                   full_time_staff +
+                   part_time_staff +
+                   float_staff +
+                   days_worked +
+                   hours_worked +
+                   as.factor(lunch) )
+
+summary(model.work4)
+```
+
+```{r}
+model.work5 <- glm(data=data.FS.log, high_effect ~
+                   setting )
+
+summary(model.work5)
+```
+
+```{r}
+model.work6 <- glm(data=data.FS.log, high_effect ~
+                   prescriptions 
+                    )
+
+summary(model.work6)
+```
+```{r}
+model.person1 <- lm(data=data.FS, readiscore_average ~ 
+                     years_pharmacy + 
+                     years_pharmacist + 
+                     age + 
+                     caffeine + 
+                     gender + 
+                     adults_house + 
+                     minors_house)
+summary(model.person1)
+```
+```{r}
+model.person2 <- lm(data=data.FS, readiscore_average ~
+                      minors_house)
+summary(model.person2)
+```
+
+```{r}
+model.person3 <- glm(data=data.FS.log, high_effect ~
+                   years_pharmacy + 
+                     years_pharmacist + 
+                     age + 
+                     caffeine + 
+                     gender + 
+                     adults_house + 
+                     minors_house)
+
+summary(model.person3)
+```
+
+```{r}
+model.person4 <- glm(data=data.FS.log, high_effect ~
+                     minors_house)
+
+summary(model.person4)
+```
+
+Seems best model is simple linear regression of number of minors in household. Makes sense in that more children, potential for younger children, and less sleep taking care of child or other caregiving demands
+
+
+
+<h2> Testing Constant Variance Assumption </h2>
+```{r}
+plot(model.person2, which=1)
+```
+
+Failed
+
+<h2> Residuals are normally distributed </h2>
+```{r}
+plot(model.person2, which=2)
+```
+Actually not bad
+
+<h2> Homogeneity of Variance</h2>
+```{r}
+plot(model.person2, which=3)
+```
+non-constant variance
+
+<h2> Outliers and high leverage points </h2>
+```{r}
+plot(model.person2, which=5)
+```
+3 most extreme points are 21, 3, and 7. All below -3
+1 point exceeds Cook's distance and is influentia
+
+
+<h2> Pharmacist Fatigue Inventory </h2>
+```{r}
+model.PFI1 <- lm(data=data.FS.PFI, readiscore_average ~
+                   energy +
+                   tired +
+                   pain +
+                   thinking +
+                   forget +
+                   spent_longer +
+                   keep_up +
+                   impatient +
+                   performing +
+                   short_cuts +
+                   above_beyond +
+                   fatigue_general)
+summary(model.PFI1)
+```
+```{r}
+model.PFI2 <- glm(data=data.FS.PFI.log, high_effect ~
+                   energy +
+                   tired +
+                   pain +
+                   thinking +
+                   forget +
+                   spent_longer +
+                   keep_up +
+                   impatient +
+                   performing +
+                   short_cuts +
+                   above_beyond +
+                   fatigue_general)
+summary(model.PFI2)
+```
+```{r}
+model.PFI3 <- glm(data=data.FS.PFI.log, high_effect ~
+                   impatient +
+                   fatigue_general)
+summary(model.PFI3)
+```
+```{r}
+model.PFI4 <- glm(data=data.FS.PFI.log, high_effect ~
+                   impatient +
+                   fatigue_general +
+                    spent_longer)
+summary(model.PFI4)
+```
+Seems final Readiscore ~ PFI model includes "generally fatigued" and "impatient"
